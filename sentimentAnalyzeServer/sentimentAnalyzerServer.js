@@ -1,5 +1,7 @@
 const express = require('express');
-const env = require('dotenv');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 function getNLUInstance(){
     const key = process.env.API_KEY;
@@ -11,9 +13,9 @@ function getNLUInstance(){
     const naturalLanguageUnderstanding = new NaturalLanguageUnderstandingV1({
         version:'2020-08-01',
         authenticator: new IamAuthenticator({
-            api_key:key,
+            apikey:key,
         }),
-        serviceUrl = url
+        serviceUrl:url
     });
 
     return naturalLanguageUnderstanding;
@@ -31,20 +33,77 @@ app.get("/",(req,res)=>{
   });
 
 app.get("/url/emotion", (req,res) => {
-
-    return res.send({"happy":"90","sad":"10"});
+    let params = {
+        url:req.query.url,
+        features:{
+            emotion:{}
+        }
+    }
+    getNLUInstance().analyze(params)
+    .then(r => {
+        console.log(JSON.stringify(r));
+        return res.send(r.result.emotion.document.emotion);
+    })
+    .catch(err => {
+        console.log(params);
+        console.log("error: ",err);
+    });
 });
 
 app.get("/url/sentiment", (req,res) => {
-    return res.send("url sentiment for "+req.query.url);
+    let params = {
+        url:req.query.url,
+        features:{
+            sentiment:{}
+        }
+    }
+    getNLUInstance().analyze(params)
+    .then(r => {
+        console.log(JSON.stringify(r));
+        return res.send(r.result.sentiment.document.label);
+    })
+    .catch(err => {
+        console.log(params);
+        console.log("error: ",err);
+    });
 });
 
 app.get("/text/emotion", (req,res) => {
-    return res.send({"happy":"10","sad":"90"});
+    let params = {
+        text:req.query.text,
+        features:{
+            emotion:{}
+        },
+        language:'en'
+    }
+    getNLUInstance().analyze(params)
+    .then(r => {
+        console.log(JSON.stringify(r));
+        return res.send(r.result.emotion.document.emotion);
+    })
+    .catch(err => {
+        console.log(params);
+        console.log("error: ",err);
+    });
 });
 
 app.get("/text/sentiment", (req,res) => {
-    return res.send("text sentiment for "+req.query.text);
+    let params = {
+        text:req.query.text,
+        features:{
+            sentiment:{}
+        },
+        language:'en'
+    }
+    getNLUInstance().analyze(params)
+    .then(r => {
+        console.log(JSON.stringify(r));
+        return res.send(r.result.sentiment.document.label);
+    })
+    .catch(err => {
+        console.log(params);
+        console.log("error: ",err);
+    });
 });
 
 let server = app.listen(8080, () => {
